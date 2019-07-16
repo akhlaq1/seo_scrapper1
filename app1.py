@@ -92,12 +92,15 @@ def scrapper(url):
 
     # This is for row 1 (title)
     try:
-        title_ln =  len(soup.find('title').text)
+        title_content = soup.find('title').text
+        title_ln =  len(title_content)
+         
         if title_ln < 70:
             result = {
                 'name':'title',
                 'message':'Félicitations votre site dispose d’un titre avec un nombre de caractères optimale soit moins de 70 caractères',
                 'title_length': title_ln,
+                'title_content':title_content,
                 'marks':5
             }
             final_score = final_score + 5
@@ -107,6 +110,7 @@ def scrapper(url):
                 'name':'title',
                 'message':'Votre titre est trop long, le nombre de caractères optimal est de 70 caractères, essayez de le raccourcir',
                 'title_length': title_ln,
+                'title_content':title_content,
                 'marks':2
             }
             final_score = final_score + 2
@@ -128,36 +132,41 @@ def scrapper(url):
     length_var_name = 'meta_desc_len'
     try:
         meta_tag  = soup.find("meta", {"name" : "description"})
-        desc_text_ln = len(meta_tag['content'])
-        title_ln = int(desc_text_ln)
+        desc_content = meta_tag['content']
+        desc_text_ln = len(desc_content)
+        desc_text_ln = int(desc_text_ln)
     
         
-        if title_ln < 150:
+        if desc_text_ln < 150:
             result = {
                 'name':name,
                 'message':'Votre méta-description est trop courte, le nombre de caractère optimale doit être entre 150 et 250 caractères.',
                 length_var_name: desc_text_ln,
+                'desc_content':desc_content,
                 'marks':1
             }
             final_score = final_score + result['marks']
             result_dict['meta_description'] = result
             print('try worked1')
-        elif title_ln > 150 and title_ln < 250:
+
+        elif desc_text_ln > 150 and desc_text_ln < 250:
             result = {
                 'name':name,
                 'message':'Félicitations votre site dispose d’une méta-description avec un nombre de caractère optimal entre 150 et 155 caractères',
                 length_var_name: desc_text_ln,
+                'desc_content':desc_content,
                 'marks':3
             }
             final_score = final_score + result['marks']
             result_dict['meta_description'] = result
             print('try worked2')
             
-        elif title_ln > 250 :
+        elif desc_text_ln > 250 :
             result = {
                 'name':name,
                 'message':' Votre méta-description est trop longue, essayez de la raccourcir, le nombre optimal est entre 150 et 250 caractères, le reste risque d’être tronqué sur l’affichage du résultat sur les moteurs de recherche.',
                 length_var_name: desc_text_ln,
+                'desc_content':desc_content,
                 'marks':2
             }
             final_score = final_score + result['marks']
@@ -915,7 +924,7 @@ def scrapper(url):
     # keywords in URL test &&  levels in url
 
     keywords_in_url = []
-    levels_in_url = []
+    directories_in_url = []
 
     for url in links:    
         if 'https' in url:
@@ -935,11 +944,17 @@ def scrapper(url):
         p = set(a.split('/'))
         e = p-t
         keywords = list(e)
-        for item in keywords:
-            keywords_in_url.append(item)
-        levels_in_url.append(len(keywords))
 
-    keywords_in_url = list(dict.fromkeys(keywords_in_url))
+        if keywords:
+            for item in keywords:
+                keywords_in_url.append(item)
+            directories_in_url.append(len(keywords))
+
+            keywords_in_url = list(dict.fromkeys(keywords_in_url))
+        else:
+            pass
+
+    
 
     result = {
         "name":"keywords_in_url",
@@ -957,8 +972,10 @@ def scrapper(url):
     result_dict['keywords_in_url'] = result
     final_score = final_score + result['marks']
 
-
-    directories = max(levels_in_url)
+    if directories_in_url:
+        directories = max(directories_in_url)
+    else:
+        directories = 0
     result = {
         "name":"directories_in_url",
         "directories":directories,
@@ -1074,7 +1091,7 @@ def scrapper(url):
 
 
 
-score,final_dict= scrapper("ned.edu.pk")
+score,final_dict= scrapper("github.com")
 
 print(score)
 print(final_dict)
