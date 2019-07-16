@@ -16,11 +16,14 @@ import tldextract
 import base64
 
 def scrapper(url):
+    
+    if "www" in url:
+        url = url.replace("www.","")
+        print(url)
+    else:
+        pass
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36', "Upgrade-Insecure-Requests": "1","DNT": "1","Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8","Accept-Language": "en-US,en;q=0.5","Accept-Encoding": "gzip, deflate"}
-
-
-
 
     final_report = []
     final_score = 0
@@ -42,20 +45,36 @@ def scrapper(url):
 
     if "https" in url or "http" in url:
         print("if worked")
-        if subdomain:
-            web = "https://"+subdomain+'.'+domain+'.'+suffix
-        else:
-            web = "https://"+domain+'.'+suffix    
         
+        try:
+            a = url.split(":")
+            a[0]  = "https:"
+            web = "".join(a)
+        except:
+            pass 
+
         print("This is web  ",web)
 
         try:
+            print("try of if worked")
             r = requests.get(web,headers=headers)
             # req = urllib.request.Request(url, headers=headers)
             # r = urllib.request.urlopen(req)
             result['message'] = 'Félicitations. Votre site les données transitants par votre site sont sécurisées avec un certificat SSL'
             result['marks'] = 4
         except:
+            try:
+                a = url.split(":")
+                a[0]  = "http:"
+                url3 = "".join(a)
+            except:
+                pass 
+
+            print("try of except worked")
+            r = requests.get(url3,headers=headers,verify=False)
+            url = url3
+            # req = urllib.request.Request(url, headers=headers)
+            # r = urllib.request.urlopen(req)
             result['message'] = '''
             Votre site ne dispose pas de certificat SSL. Les données qui y transitent peuvent donc être récupérés par des parties malveillantes. Google donne une grande importance à la sécurité des visiteurs.
             '''
@@ -65,8 +84,9 @@ def scrapper(url):
     else:
         print("else worked")
         try:
-            url = 'https://'+url
-            r = requests.get(url,headers=headers)
+            url2 = 'https://'+url
+            r = requests.get(url2,headers=headers)
+            url = url2
             # req = urllib.request.Request(url, headers=headers)
             # r = urllib.request.urlopen(req)
             result['message'] = 'Félicitations. Votre site les données transitants par votre site sont sécurisées avec un certificat SSL'
@@ -74,8 +94,10 @@ def scrapper(url):
             
             
         except:
-            url = 'http://'+url
-            r = requests.get(url,headers=headers)
+            url1 = 'http://'+url
+            print ("from else except ", url1)
+            r = requests.get(url1,headers=headers,verify=False)
+            url = url1
             # req = urllib.request.Request(url, headers=headers)
             # r = urllib.request.urlopen(req)
             result['message'] = '''
@@ -289,28 +311,38 @@ def scrapper(url):
     # This is for row 6 (sitemap)
     url = url.strip()
     sitemap_url =  url+'/sitemap.xml'
-    code = requests.get(sitemap_url,headers=headers).status_code
+    print("Sitemap url ",sitemap_url)
+    try:
 
-    name = 'sitemap'
+        code = requests.get(sitemap_url,headers=headers).status_code
 
-    if code == 200:
-        result = {
-            'name':name,
-            'message':"Félicitations, votre site dispose d’un fichier sitemap",
-            'marks':2
-        }
-        final_score = final_score + result['marks']
-        result_dict['sitemap'] = result
-        
-    else:
-        result = {
-            'name':name,
-            'message':"Votre site Web ne dispose pas d'un fichier sitemap. Les sitemaps peuvent aider les robots à indexer votre contenu de manière plus complète et plus rapide. ",
-            'marks':0
-        }
-        final_score = final_score + result['marks']
-        result_dict['sitemap'] = result
-        
+        name = 'sitemap'
+
+        if code == 200:
+            result = {
+                'name':name,
+                'message':"Félicitations, votre site dispose d’un fichier sitemap",
+                'marks':2
+            }
+            final_score = final_score + result['marks']
+            result_dict['sitemap'] = result
+            
+        else:
+            result = {
+                'name':name,
+                'message':"Votre site Web ne dispose pas d'un fichier sitemap. Les sitemaps peuvent aider les robots à indexer votre contenu de manière plus complète et plus rapide. ",
+                'marks':0
+            }
+            final_score = final_score + result['marks']
+            result_dict['sitemap'] = result
+    except:
+            result = {
+                'name':name,
+                'message':"Votre site Web ne dispose pas d'un fichier sitemap. Les sitemaps peuvent aider les robots à indexer votre contenu de manière plus complète et plus rapide. ",
+                'marks':0
+            }
+            final_score = final_score + result['marks']
+            result_dict['sitemap'] = result
 
 
     # This is for row 7 (google Analytics)
@@ -378,6 +410,7 @@ def scrapper(url):
     bl = sbl.lookup_url(url)
 
     name = 'google_safe_browsing'
+    print("google_safe_browsing ",url )
     if bl is None:
         print("Website is safe")
         result = {
@@ -437,47 +470,62 @@ def scrapper(url):
 
 
     # mobile_friendliness_test
-
+    print("mobile friendly ", url)
     data = {
     "url": url,
     "requestScreenshot": True,
     }
-    r1 = requests.post('https://searchconsole.googleapis.com/v1/urlTestingTools/mobileFriendlyTest:run?key=AIzaSyDExRwe7TNEgHa_JLogOVjccqWNVoaH-EQ',data)
-    r1.text
-    
-    a = json.loads(r1.text)
-    imgstring = a['screenshot']['data']
-    # import base64
-    # imgdata = base64.b64decode(imgstring)
-    # filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
-    # with open(filename, 'wb') as f:
-    #     f.write(imgdata)
-
-    name = 'mobile_friendliness_test'
-
-    if a['mobileFriendliness'] == 'MOBILE_FRIENDLY':
-        print("Website is mobile friendly")
-        result = {
-            'name':name,
-            'message':"Félicitations. Votre site est Mobile friendly.",
-            'result': a['mobileFriendliness'],
-            'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring),
-            'marks':4
-        }
-        final_score = final_score + result['marks']
-        result_dict['mobile_friendliness_test'] = result
+    try:
+        r1 = requests.post('https://searchconsole.googleapis.com/v1/urlTestingTools/mobileFriendlyTest:run?key=AIzaSyDExRwe7TNEgHa_JLogOVjccqWNVoaH-EQ',data)
+        r1.text
         
-    else:
-        result = {
-            'name':name,
-            'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
-            'marks':0,
-            'result': a['mobileFriendliness'],
-            'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring)
-        }
-        final_score = final_score + result['marks']
-        result_dict['mobile_friendliness_test'] = result
+        a = json.loads(r1.text)
+        imgstring = a['screenshot']['data']
+        if imgstring:
+            print("image of mobile returned")
+        else:
+            print("image of mobile NOT returned")
 
+        # import base64
+        # imgdata = base64.b64decode(imgstring)
+        # filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
+        # with open(filename, 'wb') as f:
+        #     f.write(imgdata)
+
+        name = 'mobile_friendliness_test'
+
+        if a['mobileFriendliness'] == 'MOBILE_FRIENDLY':
+            print("Website is mobile friendly")
+            result = {
+                'name':name,
+                'message':"Félicitations. Votre site est Mobile friendly.",
+                'result': a['mobileFriendliness'],
+                'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring),
+                'marks':4
+            }
+            final_score = final_score + result['marks']
+            result_dict['mobile_friendliness_test'] = result
+            
+        else:
+            result = {
+                'name':name,
+                'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
+                'marks':0,
+                'result': a['mobileFriendliness'],
+                'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring)
+            }
+            final_score = final_score + result['marks']
+            result_dict['mobile_friendliness_test'] = result
+
+    except:
+            result = {
+                'name':name,
+                'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
+                'marks':0,
+                'result': "Not Mobile Friendly"
+            }
+            final_score = final_score + result['marks']
+            result_dict['mobile_friendliness_test'] = result
     #     #  "mobileFriendlyIssues": [
     # #   {
     # #    "rule": "TAP_TARGETS_TOO_CLOSE"
@@ -494,6 +542,7 @@ def scrapper(url):
 
 
     # google page speed
+    print("Google page speed ",url)
     r2 = requests.get('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={}?key=AIzaSyAXf3ILJpeIs1nfDvvmLk0MsQDsuIsG5gM'.format(url))
     b = json.loads(r2.text)
     name = "page_speed"
@@ -907,7 +956,7 @@ def scrapper(url):
     link_levels = []
     found_links = re.findall(pattern, r.text)
     links = []
-    back_links = []
+    external_links = []
 
     web = domain+'.'+suffix
 
@@ -916,7 +965,7 @@ def scrapper(url):
             links.append(url+link)
             
         elif url not in link and "#" not in link and web not in link:
-            back_links.append(link)
+            external_links.append(link)
             
     links = list(dict.fromkeys(links))
 
@@ -997,7 +1046,7 @@ def scrapper(url):
 
     # # broken_link test
     # broken_links = []
-    # all_links = links + back_links
+    # all_links = links + external_links
     # for link in all_links:
     #     try:
     #         print("Checking link health of ",link)
@@ -1022,22 +1071,22 @@ def scrapper(url):
 
 
 
-    # back links test
+    # external links test
     result = {
-        "name":"back_links_test",
+        "name":"external_links_test",
         "message":"",
         "marks":'',
-        "back_links":back_links
+        "external_links":external_links
     }
-    if back_links:
-        result['message'] = "Félicitations, vous avez plusieurs backlinks. Voir la liste complète"
+    if external_links:
+        result['message'] = "Félicitations, vous avez plusieurs external links. Voir la liste complète"
         result['marks'] = 9
     else:
-        result['message'] = "Nous n'avons pas détécté de Backlinks pour votre site internet. Les liens retour (backlinks) de qualité, sont primordiaux pour une bon référencement."
+        result['message'] = "Nous n'avons pas détécté de external links pour votre site internet. Les liens retour (external internal links) de qualité, sont primordiaux pour une bon référencement."
         result['marks'] = 0
         
     final_score = final_score + result['marks']
-    result_dict['back_links_test'] = result
+    result_dict['external_links_test'] = result
 
 
 
@@ -1073,7 +1122,7 @@ def scrapper(url):
         "name":"internal_links_test",
         "message":"",
         "marks":'',
-        "back_links":links
+        "internal_links":links
     }
     if links:
         result['message'] = "Félicitations. Nous avons détécté l'utilisation de liens internes sur votre page."
@@ -1091,7 +1140,7 @@ def scrapper(url):
 
 
 
-score,final_dict= scrapper("github.com")
+score,final_dict= scrapper("https://tousrepreneurs.fr")
 
 print(score)
 print(final_dict)
