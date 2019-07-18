@@ -46,11 +46,12 @@ def scrapper(url):
     if "https" in url or "http" in url:
         print("if worked")
         
-        
-        a = url.split(":")
-        a[0]  = "https:"
-        web = "".join(a)
-    
+        try:
+            a = url.split(":")
+            a[0]  = "https:"
+            web = "".join(a)
+        except:
+            pass 
 
         print("This is web  ",web)
 
@@ -59,14 +60,15 @@ def scrapper(url):
             r = requests.get(web,headers=headers)
             # req = urllib.request.Request(url, headers=headers)
             # r = urllib.request.urlopen(req)
-            url = web
             result['message'] = 'Félicitations. Votre site les données transitants par votre site sont sécurisées avec un certificat SSL'
             result['marks'] = 4
         except:
-
-            a = url.split(":")
-            a[0]  = "http:"
-            url3 = "".join(a)
+            try:
+                a = url.split(":")
+                a[0]  = "http:"
+                url3 = "".join(a)
+            except:
+                pass 
 
             print("try of except worked")
             r = requests.get(url3,headers=headers,verify=False)
@@ -102,10 +104,9 @@ def scrapper(url):
                 Votre site ne dispose pas de certificat SSL. Les données qui y transitent peuvent donc être récupérés par des parties malveillantes. Google donne une grande importance à la sécurité des visiteurs.
                 '''
             result['marks'] = 0
-
-    print(result)        
-    result_dict['https_test'] = result
-    final_score = final_score + result['marks']
+            
+            result_dict['https_test'] = result
+            final_score = final_score + result['marks']
 
     soup = BeautifulSoup(r.text, "lxml")
 
@@ -474,58 +475,58 @@ def scrapper(url):
     "url": url,
     "requestScreenshot": True,
     }
-    try:
-        r1 = requests.post('https://searchconsole.googleapis.com/v1/urlTestingTools/mobileFriendlyTest:run?key=AIzaSyDExRwe7TNEgHa_JLogOVjccqWNVoaH-EQ',data)
-        r1.text
+    
+    r1 = requests.post('https://searchconsole.googleapis.com/v1/urlTestingTools/mobileFriendlyTest:run?key=AIzaSyDExRwe7TNEgHa_JLogOVjccqWNVoaH-EQ',data).json()
+    
+    
+    # a = json.loads(r1.text)
+    a = r1
+    imgstring = a['screenshot']['data']
+    if imgstring:
+        print("image of mobile returned")
+    else:
+        print("image of mobile NOT returned")
+
+    # import base64
+    # imgdata = base64.b64decode(imgstring)
+    # filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
+    # with open(filename, 'wb') as f:
+    #     f.write(imgdata)
+
+    name = 'mobile_friendliness_test'
+
+    if a['mobileFriendliness'] == 'MOBILE_FRIENDLY':
+        print("Website is mobile friendly")
+        result = {
+            'name':name,
+            'message':"Félicitations. Votre site est Mobile friendly.",
+            'result': a['mobileFriendliness'],
+            'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring),
+            'marks':4
+        }
+        final_score = final_score + result['marks']
+        result_dict['mobile_friendliness_test'] = result
         
-        # a = json.loads(r1.text).decode('utf-8')
-        a = json.loads(r1.text)
-        imgstring = a['screenshot']['data']
-        if imgstring:
-            print("image of mobile returned")
-        else:
-            print("image of mobile NOT returned")
+    else:
+        result = {
+            'name':name,
+            'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
+            'marks':0,
+            'result': a['mobileFriendliness'],
+            'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring)
+        }
+        final_score = final_score + result['marks']
+        result_dict['mobile_friendliness_test'] = result
 
-        # import base64
-        # imgdata = base64.b64decode(imgstring)
-        # filename = 'some_image.jpg'  # I assume you have a way of picking unique filenames
-        # with open(filename, 'wb') as f:
-        #     f.write(imgdata)
-
-        name = 'mobile_friendliness_test'
-
-        if a['mobileFriendliness'] == 'MOBILE_FRIENDLY':
-            print("Website is mobile friendly")
-            result = {
-                'name':name,
-                'message':"Félicitations. Votre site est Mobile friendly.",
-                'result': a['mobileFriendliness'],
-                'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring),
-                'marks':4
-            }
-            final_score = final_score + result['marks']
-            result_dict['mobile_friendliness_test'] = result
-            
-        else:
-            result = {
-                'name':name,
-                'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
-                'marks':0,
-                'result': a['mobileFriendliness'],
-                'img_string':'data:image/png;base64,' + urllib.parse.quote(imgstring)
-            }
-            final_score = final_score + result['marks']
-            result_dict['mobile_friendliness_test'] = result
-
-    except:
-            result = {
-                'name':name,
-                'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
-                'marks':0,
-                'result': "Not Mobile Friendly"
-            }
-            final_score = final_score + result['marks']
-            result_dict['mobile_friendliness_test'] = result
+    # except:
+    #         result = {
+    #             'name':name,
+    #             'message':"Votre site n'est pas optimisé pour le mobile. Les moteurs de recherches donnent une très grande importance à la compatibilité mobile.",
+    #             'marks':0,
+    #             'result': "Not Mobile Friendly"
+    #         }
+    #         final_score = final_score + result['marks']
+    #         result_dict['mobile_friendliness_test'] = result
     #     #  "mobileFriendlyIssues": [
     # #   {
     # #    "rule": "TAP_TARGETS_TOO_CLOSE"
@@ -541,46 +542,19 @@ def scrapper(url):
 
 
 
-    # google page speed
-    try:
-        print("Google page speed ",url)
-        r2 = requests.get('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={}?key=AIzaSyAXf3ILJpeIs1nfDvvmLk0MsQDsuIsG5gM'.format(url))
-        #b = json.loads(r2.text).decode('utf-8')
-        b = json.loads(r2.text)
-        name = "page_speed"
+    # # google page speed
+    # print("Google page speed ",url)
+    # r2 = requests.get('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={}?key=AIzaSyAXf3ILJpeIs1nfDvvmLk0MsQDsuIsG5gM'.format(url))
+    # b = json.loads(r2.text)
+    # name = "page_speed"
 
-        score =  b['lighthouseResult']['audits']['speed-index']['displayValue']
-        print("this is speed index",score)
+    # # speed_index =  b['lighthouse']['audits']['speed-index']['.displayValue']
+    # #print("this is speed index",speed_index)
 
-        # final_report.append({
-        #     "google_page_speed_data":b
-        # })
-        result = {
-            "name":"google_page_speed",
-            "speed_index":score,
-            "message":"",
-            "marks":""
-        }
-        if "\xa0s" in score:
-            score1 = float(score.replace("\xa0s",""))
-        else:
-            score1 = float(score)
-
-        if score1 < 5:
-            result['message'] = "Félicitations. La vitesse moyenne de chargement de votre site est de X secondes, soit en dessous de la vitesse moyenne de 5secondes."
-            result['marks'] = 4
-        else:
-            result['message'] = "La vitesse moyenne de chargement de votre site internet est de X secondes, c'est supérieur à la vitesse moyenne optimale qui est de 5 secondes."
-            result['marks'] = 2
-    
-    except:
-        result = {
-            "name":"google_page_speed",
-            "speed_index":0,
-            "message":"Désolé, Google n'a renvoyé aucune réponse indiquant une vitesse de page relative à votre site Web.",
-            "marks":0
-        }
-    result_dict['page_speed'] = result
+    # # final_report.append({
+    # #     "google_page_speed_data":b
+    # # })
+    # result_dict['page_speed'] = b
 
 
 
@@ -1169,84 +1143,6 @@ def scrapper(url):
     final_score = final_score + result['marks']
     result_dict['internal_links_test'] = result
 
-
-
-        # For SEO Friendly URL
-    from string import punctuation
-    special_charac =  list(set(punctuation))
-    special_charac.pop(20)
-    name = "seo_friendly_url"
-
-    found_special_characters = []
-    for item in special_charac:
-        if item in subdomain+domain:
-            if item == "-":
-                pass
-            else:    
-                found_special_characters.append(item)
-            
-    result = {
-        "name":name,
-        "message":'',
-        "marks":'',
-        "found_special_characters":found_special_characters
-    }
-
-    if found_special_characters:
-        result['message'] = "Certaines de vos URL ne sont pas SEO Friendly. Voir la liste complète"
-        result['marks'] = 0
-    else:
-        result['message'] = "Félicitations. Touts vos urls sont SEO Friendly"
-        result['marks'] = 3
-
-        
-    final_score = final_score + result['marks']
-    result_dict['seo_friendly_url'] = result
-        
-        # Page Size test
-    name = "page_size_test"
-
-    result = {
-        "name":name,
-        "message":'',
-        "marks":''
-    }
-    hdr = { 'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)' }
-
-    req = urllib.request.Request(url, headers=hdr)
-    response = urllib.request.urlopen(req)
-    size = (len(response.read()))/1024
-
-    if size < 33:
-        result['message'] = "Toutes nos félicitations! La taille du code HTML de votre page Web est de {} Kb et se situe en dessous de la taille HTML moyenne de la page Web de 33 Kb. Un chargement plus rapide des sites Web se traduit par une meilleure expérience utilisateur, des taux de conversion plus élevés et, de manière générale, un meilleur classement des moteurs de recherche.".format(size)
-        result['marks'] = 3
-    else:
-        result['message'] = " La taille du code HTML de votre page Web est de {} Kb et se situe au dessusde la taille HTML moyenne de la page Web de 33 Kb. Un chargement plus rapide des sites Web se traduit par une meilleure expérience utilisateur, des taux de conversion plus élevés et, de manière générale, un meilleur classement des moteurs de recherche.".format(size)
-        result['marks'] = 0
-        
-    final_score = final_score + result['marks']
-    result_dict['page_size_test'] = result
-
-        # For speakable tags
-    name = "speakable_tags"
-    result = {
-        "name":name,
-        "message":'',
-        "marks":''
-    }
-
-    main_text = str(soup)
-    if "speakable" in main_text and "@type" in main_text:
-        result['message'] = "Félicitations. Nous avons détécté des balises speachable."
-        result['marks'] = 2
-    else:
-        result['message'] = "Nous n'avons détécté aucune balise speachable sur votre site internet. Ces balises permettent d'indiquiter aux assistants vocaux qu'un contenu est adapté à la lecture pour répondre aux requêtes des utilisateurs, ce critère est nouveau et de plus en plus pris en compte par les moteurs de recherche."
-        result['marks'] = 0
-        
-    final_score = final_score + result['marks']
-    result_dict['speakable_tags'] = result
-        
-
     test_count = {
         "test_passed":"",
         "test_failed":"",
@@ -1255,7 +1151,6 @@ def scrapper(url):
     passed = 0
     failed = 0
     without_marks = 0
-    no_marks_field = []
     for k,v in result_dict.items():
         try:
             if v['marks'] == 0:
@@ -1265,12 +1160,7 @@ def scrapper(url):
             else:
                 pass
         except:
-            try:
-                without_marks = without_marks+1
-                no_marks_field.append(v['name'])
-            except:
-                pass
-    print("This is without marks tests", no_marks_field)
+            without_marks = without_marks+1
 
     test_count['test_passed'] = passed
     test_count['test_failed'] = failed
@@ -1282,7 +1172,7 @@ def scrapper(url):
 
 
 
-score,final_dict= scrapper("https://www.devee.fr")
+score,final_dict= scrapper("lemarrakech-nancy.fr")
 
 print(score)
 print(final_dict)

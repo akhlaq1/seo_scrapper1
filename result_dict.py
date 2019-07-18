@@ -31,5 +31,6 @@ result_dict = {
     'directories_in_url':'',
     'page_size_test':'',
     'seo_friendly_url':'',
-    'speakable_tags':''
+    'speakable_tags':'',
+    'test_count':''
 }
